@@ -32,3 +32,60 @@ Click Download PGN.
 Your games are downloaded as a.pgn file.
 
 Open the PGN in your chess analysis software.
+
+⚠️ Disclaimer
+
+This project is an independent, unofficial tool and is not affiliated with, endorsed by, or sponsored by Chess.com.
+
+Chess.com and its associated trademarks belong to their respective owners.
+
+Please use the project responsibly and respect Chess.com's terms, API policies, and rate limits.
+
+
+🔐 Privacy
+
+This project does not require your Chess.com password.
+
+Only publicly accessible Chess.com game information is used.
+
+
+
+🔧 Technologies Used
+
+Depending on your implementation, this project may use:
+
+🌐 HTML
+
+🎨 CSS
+
+⚡ JavaScript
+
+🔗 Chess.com public data/API endpoints
+
+📄 PGN formatting
+
+
+
+♟️ What is PGN?
+
+PGN (Portable Game Notation) is a standard format for recording chess games.
+
+A PGN file can contain information such as:
+
+Players
+
+Date
+
+Event
+
+Result
+
+Opening
+
+Rating
+
+Moves
+
+Time control
+
+Game metadata
