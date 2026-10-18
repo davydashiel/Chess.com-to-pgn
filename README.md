@@ -23,69 +23,72 @@ You do not need to navigate through your Chess.com game history. Enter a usernam
 
 🛠️ How It Works
 
-Enter a Chess.com username.
+*Enter a Chess.com username.
 
-Select the games or date range you want.
+*Select the games or date range you want.
 
-Click Download PGN.
+*Click Download PGN.
 
-Your games are downloaded as a.pgn file.
+*Your games are downloaded as a.pgn file.
 
-Open the PGN in your chess analysis software.
+*Open the PGN in your chess analysis software.
+
+-----------------------------------------------------------------------------
 
 ⚠️ Disclaimer
 
-This project is an independent, unofficial tool and is not affiliated with, endorsed by, or sponsored by Chess.com.
+*This project is an independent, unofficial tool and is not affiliated with, endorsed by, or sponsored by Chess.com.
 
-Chess.com and its associated trademarks belong to their respective owners.
+*Chess.com and its associated trademarks belong to their respective owners.
 
-Please use the project responsibly and respect Chess.com's terms, API policies, and rate limits.
+*Please use the project responsibly and respect Chess.com's terms, API policies, and rate limits.
 
+-----------------------------------------------------------------------------
 
 🔐 Privacy
 
-This project does not require your Chess.com password.
+*This project does not require your Chess.com password.
 
-Only publicly accessible Chess.com game information is used.
+*Only publicly accessible Chess.com game information is used.
 
-
+-----------------------------------------------------------------------------
 
 🔧 Technologies Used
 
-Depending on your implementation, this project may use:
+*Depending on your implementation, this project may use:
 
-🌐 HTML
+*🌐 HTML
 
-🎨 CSS
+*🎨 CSS
 
-⚡ JavaScript
+*⚡ JavaScript
 
-🔗 Chess.com public data/API endpoints
+*🔗 Chess.com public data/API endpoints
 
-📄 PGN formatting
+*📄 PGN formatting
 
-
+------------------------------------------------------------------------------
 
 ♟️ What is PGN?
 
-PGN (Portable Game Notation) is a standard format for recording chess games.
+*PGN (Portable Game Notation) is a standard format for recording chess games.
 
-A PGN file can contain information such as:
+*A PGN file can contain information such as:
 
-Players
+*Players
 
-Date
+*Date
 
-Event
+*Event
 
-Result
+*Result
 
-Opening
+*Opening
 
-Rating
+*Rating
 
-Moves
+*Moves
 
-Time control
+*Time control
 
 Game metadata
