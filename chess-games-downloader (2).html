@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Game Vault – download all your Chess.com games</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+:root{--bg:#f3f1ec;--ink:#1d2321;--mute:#5f6b66;--sq1:#e8e4d9;--sq2:#4f7a5f;--card:#fffefb;--line:#d7d3c7;--accent:#2f6b4a;--err:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#161b19;--ink:#ecebe5;--mute:#9aa7a1;--sq1:#2a312e;--sq2:#3d6b50;--card:#1e2522;--line:#333c38;--accent:#7fc29a;--err:#ff8a80}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.5;min-height:100vh}
+.board{height:48px;background:conic-gradient(var(--sq2) 25%,var(--sq1) 0 50%,var(--sq2) 0 75%,var(--sq1) 0) 0 0/48px 48px}
+main{max-width:640px;margin:0 auto;padding:40px 20px 64px}
+h1{font-size:clamp(2.2rem,7vw,3.4rem);line-height:1.02;font-weight:800;letter-spacing:-.03em;margin:0 0 14px}
+.lead{color:var(--mute);margin:0 0 32px;font-size:1.05rem;max-width:52ch}
+form{display:flex;gap:10px;flex-wrap:wrap}
+input{flex:1 1 220px;font:inherit;padding:14px 16px;border:2px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+input:focus,button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button,.dl{font:inherit;font-weight:600;padding:14px 22px;border:0;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;text-decoration:none;display:inline-block}
+@media (prefers-color-scheme:dark){button,.dl{color:#0f1512}}
+button:disabled{opacity:.55;cursor:wait}
+.panel{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px;display:none}
+.panel.on{display:block}
+.bar{height:10px;background:var(--sq1);border-radius:5px;overflow:hidden;margin:12px 0}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.status{margin:0;font-family:"IBM Plex Mono",monospace;font-size:.88rem;color:var(--mute)}
+.err{color:var(--err);font-weight:600}
+.done h2{margin:0 0 4px;font-size:1.4rem}
+.tree{font-family:"IBM Plex Mono",monospace;font-size:.82rem;background:var(--sq1);border-radius:6px;padding:12px 14px;margin:14px 0;overflow-x:auto;white-space:pre}
+ul.months{list-style:none;padding:0;margin:14px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;font-size:.9rem}
+ul.months li{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:3px 0}
+ul.months span{color:var(--mute)}
+footer{margin-top:36px;font-size:.85rem;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="board" aria-hidden="true"></div>
+<main>
+  <h1>All your Chess.com games, one click.</h1>
+  <p class="lead">Enter your Chess.com username. Game Vault collects every game you have ever played and gives you one ZIP, sorted by year and month, with each game as its own PGN file.</p>
+
+  <form id="f">
+    <input id="u" placeholder="Chess.com username" autocomplete="off" autocapitalize="off" spellcheck="false" required aria-label="Chess.com username">
+    <button id="go" type="submit">Download all games</button>
+  </form>
+
+  <section class="panel" id="p" aria-live="polite">
+    <p class="status" id="s"></p>
+    <div class="bar"><i id="b"></i></div>
+    <div id="out"></div>
+  </section>
+
+  <footer>Runs entirely in your browser using Chess.com’s public data. Nothing is uploaded anywhere. Public games only.</footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const safe=s=>String(s||"unknown").replace(/[^\w.-]+/g,"_");
+const pad=n=>String(n).padStart(2,"0");
+
+async function getJSON(url,tries=4){
+  for(let i=0;i<tries;i++){
+    const r=await fetch(url);
+    if(r.ok) return r.json();
+    if(r.status===404) throw new Error("NOTFOUND");
+    if(r.status===429||r.status>=500){await sleep(1500*(i+1));continue;}
+    throw new Error("HTTP "+r.status);
+  }
+  throw new Error("Chess.com is rate-limiting requests. Wait a minute and try again.");
+}
+function setProg(t,pct){$("s").textContent=t;$("b").style.width=pct+"%";}
+function showErr(m){$("s").innerHTML='<span class="err"></span>';$("s").firstChild.textContent=m;$("b").style.width="0";}
+
+$("f").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const user=$("u").value.trim().toLowerCase();
+  if(!user) return;
+  const btn=$("go");btn.disabled=true;
+  $("p").classList.add("on");$("out").innerHTML="";
+  try{
+    if(typeof JSZip==="undefined") throw new Error("ZIP library failed to load. Check your internet connection and reload.");
+    setProg("Finding your archives…",2);
+    let archives;
+    try{ archives=(await getJSON(`https://api.chess.com/pub/player/${encodeURIComponent(user)}/games/archives`)).archives; }
+    catch(err){ if(err.message==="NOTFOUND") throw new Error(`No Chess.com player named “${user}”. Check the spelling.`); throw err; }
+    if(!archives.length) throw new Error("This account has no public games yet.");
+
+    const zip=new JSZip(), root=zip.folder(safe(user)+"_chess_games");
+    const summary=[]; let total=0;
+    for(let i=0;i<archives.length;i++){
+      const m=archives[i].match(/(\d{4})\/(\d{2})$/); const y=m[1], mo=m[2];
+      setProg(`Fetching ${MONTHS[+mo-1]} ${y}… (${i+1} of ${archives.length})`,5+90*i/archives.length);
+      const games=((await getJSON(archives[i])).games||[]).filter(g=>g.pgn).sort((a,b)=>a.end_time-b.end_time);
+      if(!games.length) continue;
+      const folder=root.folder(y).folder(`${y}-${mo}_${MONTHS[+mo-1]}`);
+      const combined=[];
+      games.forEach((g,idx)=>{
+        const d=new Date(g.end_time*1000);
+        const date=`${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`;
+        const res=(g.pgn.match(/\[Result "([^"]+)"/)||[])[1]||"";
+        const name=`${pad(idx+1)}_${date}_${safe(g.white.username)}_vs_${safe(g.black.username)}_${safe(g.time_class)}_${safe(res)}.pgn`;
+        folder.file(name,g.pgn+"\n");
+        combined.push(g.pgn.trim());
+      });
+      folder.file(`_all_games_${y}-${mo}.pgn`,combined.join("\n\n\n")+"\n");
+      summary.push([`${MONTHS[+mo-1]} ${y}`,games.length]); total+=games.length;
+      await sleep(150);
+    }
+    if(!total) throw new Error("No downloadable games found for this account.");
+
+    setProg("Building your ZIP…",96);
+    const blob=await zip.generateAsync({type:"blob",compression:"DEFLATE"},md=>setProg("Building your ZIP…",96+md.percent*0.04));
+    const url=URL.createObjectURL(blob), fname=`${safe(user)}_chess_games.zip`;
+    const a=document.createElement("a");a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();
+
+    setProg(`Done. ${total.toLocaleString()} games in ${summary.length} months.`,100);
+    const out=$("out");out.className="done";
+    out.innerHTML=`<h2></h2><a class="dl"></a><div class="tree"></div><ul class="months"></ul>`;
+    out.querySelector("h2").textContent=`${total.toLocaleString()} games ready`;
+    const dl=out.querySelector(".dl");dl.href=url;dl.download=fname;dl.textContent="Download again";
+    out.querySelector(".tree").textContent=`${safe(user)}_chess_games/\n  ${summary[0][0].split(" ")[1]}/\n    ${summary[0][0].split(" ")[1]}-${pad(MONTHS.indexOf(summary[0][0].split(" ")[0])+1)}_${summary[0][0].split(" ")[0]}/\n      01_date_white_vs_black_rapid_1-0.pgn\n      …\n      _all_games_month.pgn`;
+    const ul=out.querySelector(".months");
+    summary.slice().reverse().forEach(([k,n])=>{const li=document.createElement("li");li.textContent=k+" ";const sp=document.createElement("span");sp.textContent=n;li.appendChild(sp);ul.appendChild(li);});
+  }catch(err){
+    showErr(err.message.startsWith("Failed to fetch")?"Couldn’t reach Chess.com. Check your connection and try again.":err.message);
+  }finally{btn.disabled=false;}
+});
+</script>
+</body>
+</html>
