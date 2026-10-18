@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Game Vault – download your Chess.com games</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="bg" aria-hidden="true"><div class="pieces" id="pieces"></div></div>
+
+<header class="hero" id="hero">
+  <p class="tag"><span>♞</span> GAME VAULT</p>
+  <h1>Your whole chess history.<br><em>One ZIP.</em></h1>
+  <p class="lead">Enter your Chess.com username, filter by wins, losses, draws, time control and month, then download exactly the games you want.</p>
+
+  <form id="f">
+    <input id="u" placeholder="chess.com username" autocomplete="off" autocapitalize="off" spellcheck="false" required aria-label="Chess.com username">
+    <button class="btn" id="load" type="submit"><span>Find my games</span></button>
+  </form>
+
+  <div class="track" id="track" aria-hidden="true"><i id="fill"></i><b id="knight">♞</b></div>
+  <p class="status" id="s" aria-live="polite"></p>
+  <a class="down" id="scrollHint" href="#picker" hidden>↓ choose your games</a>
+</header>
+
+<section class="picker" id="picker" hidden>
+  <h2>Result</h2>
+  <div class="results" id="results"></div>
+
+  <h2>Time control</h2>
+  <div class="chips" id="chips"></div>
+
+  <h2>Months</h2>
+  <div class="quick">
+    <button type="button" id="qAll">Select all</button>
+    <button type="button" id="qNone">Clear</button>
+    <button type="button" id="qLast">Last 12 months</button>
+  </div>
+  <div class="scroll"><div class="grid" id="grid" role="group" aria-label="Pick months"></div></div>
+  <p class="hint">Tip: click a year to toggle its whole row.</p>
+
+  <div class="dlbar">
+    <p id="sum"></p>
+    <button class="btn" id="dl" type="button"><span>Download ZIP</span></button>
+  </div>
+</section>
+
+<footer>Runs in your browser with Chess.com’s public data. Nothing is uploaded. Public games only.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
